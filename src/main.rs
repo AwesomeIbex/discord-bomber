@@ -32,6 +32,8 @@ async fn main() -> Result<(), Error> {
 
     user = user.with_captcha_key(&captcha_key);
 
+    //TODO check rate limit BEFORE getting captcha
+
     let discord_token = discord::register(captcha_key, &user).await?;
     log::info!("Retrieved discord auth token: {:?}", discord_token);
 
