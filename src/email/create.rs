@@ -56,12 +56,13 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_user() {
-        assert_eq!(create_email(&User::new()).await.unwrap().address.as_str(), "sdkjsdhksadafj@baybabes.com")
+        assert_eq!(create_email(&User::new()).await.unwrap().address.as_str().is_empty(), false)
     }
+
     #[tokio::test]
     async fn test_create_user_twenty() {
         let mut emails = vec![];
-        for x in 0..1 {
+        for x in 0..20 {
             let x: i32 = x;
             let result = create_email(&User::new()).await;
             let response = result.unwrap();

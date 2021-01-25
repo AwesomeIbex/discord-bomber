@@ -13,11 +13,12 @@ const TWO_CAPTCHA_API_KEY: &str = "";
 const TWO_CAPTCHA_URL: &str = "http://2captcha.com/in.php";
 
 pub async fn solve() -> Result<String, Error> {
+    log::info!("> Solving captcha..");
     let client = Client::builder()
         .cookie_store(true)
         .build()?;
 
-    let captcha_id = client.post(TWO_CAPTCHA_URL)
+    let response = client.post(TWO_CAPTCHA_URL)
         .query(&[
             ("key", TWO_CAPTCHA_API_KEY),
             ("method", "userrecaptcha"),
@@ -31,16 +32,27 @@ pub async fn solve() -> Result<String, Error> {
         .split("|")
         .map(|item| item.to_string())
         .collect::<Vec<String>>();
-    let captcha_id = captcha_id[1].clone();
 
-    let mut recaptcha_answer = check_answer(&client, &captcha_id).await?;
+    log::info!("> Received captcha query with results {:?}", response);
 
-    while recaptcha_answer.contains("CAPCHA_NOT_READY") {
+    let captcha_id = response[1].clone();
+
+    log::info!("> Extracted captcha id {}", captcha_id);
+
+    let mut answer = check_answer(&client, &captcha_id).await?;
+
+    log::info!("> Checking initial captcha answer {}", answer);
+
+    let mut counter = 0;
+    while answer.contains("CAPCHA_NOT_READY") {
+        log::info!("> Checking captcha answer for the {} time {}", counter, answer);
+
         sleep(Duration::from_secs(5)).await;
-        recaptcha_answer = check_answer(&client, &captcha_id).await?;
+        answer = check_answer(&client, &captcha_id).await?;
+        counter += 1;
     }
 
-    Ok(recaptcha_answer)
+    Ok(answer)
 }
 
 async fn check_answer(client: &Client, captcha_id: &str) -> Result<String, Error> {
