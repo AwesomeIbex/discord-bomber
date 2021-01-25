@@ -41,7 +41,9 @@ async fn main() -> Result<(), Error> {
     let file = File::open("accounts.json").await?;
     let mut writer = BufWriter::new(file);
 
-    let result = writer.write(serde_json::to_string(&u)?.as_bytes()).await.unwrap();
+    let string = serde_json::to_string(&u)?;
+    log::info!("Writing to file: {}", string);
+    let result = writer.write(string.as_bytes()).await.unwrap();
     // Join server
 
     // Destroy
