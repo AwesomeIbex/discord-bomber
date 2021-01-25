@@ -51,7 +51,7 @@ impl Register {
 }
 
 
-pub async fn register(captcha_answer: String, user: &User) -> Result<String, Error> {
+pub async fn register(captcha_answer: String, user: &User) -> Result<Token, Error> {
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
     header_map.insert(CONNECTION, "keep-alive".parse().unwrap());

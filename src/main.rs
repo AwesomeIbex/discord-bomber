@@ -35,7 +35,7 @@ async fn main() -> Result<(), Error> {
     let discord_token = discord::register(captcha_key, &user).await?;
     log::info!("Retrieved discord auth token: {:?}", discord_token);
 
-    user = user.with_discord_token(&discord_token);
+    user = user.with_discord_token(&discord_token.token);
 
 
     discord::join_server(&user).await?;
