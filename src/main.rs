@@ -3,6 +3,7 @@ use anyhow::Error;
 use crate::user::User;
 use tokio::fs::File;
 use tokio::io::{BufWriter, AsyncWriteExt};
+use crate::discord::DISCORD_INVITE_LINK;
 
 mod email;
 mod discord;
@@ -36,14 +37,19 @@ async fn main() -> Result<(), Error> {
 
     user = user.with_discord_token(&discord_token);
 
+
+    discord::join_server(&user).await?;
+    log::info!("Joined discord server at {}", DISCORD_INVITE_LINK);
+
+
     u.push(user);
 
     let file = File::open("accounts.json").await?;
     let mut writer = BufWriter::new(file);
 
-    let string = serde_json::to_string(&u)?;
+    let string = serde_json::to_value(&u)?;
     log::info!("Writing to file: {}", string);
-    let result = writer.write(string.as_bytes()).await.unwrap();
+    let result = writer.write(string.to_string().as_bytes()).await.unwrap();
     // Join server
 
     // Destroy

@@ -1,6 +1,6 @@
 use anyhow::Error;
 use reqwest::{Client, StatusCode};
-use reqwest::header::{CONNECTION, CONTENT_TYPE, HeaderMap, USER_AGENT as USER_AGENT_PARAM};
+use reqwest::header::{CONNECTION, CONTENT_TYPE, HeaderMap, USER_AGENT as USER_AGENT_PARAM, AUTHORIZATION};
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, sleep};
 
@@ -9,6 +9,7 @@ use crate::user::User;
 
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
+pub const DISCORD_INVITE_LINK: &str = "T7DFfqBu";
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -73,6 +74,30 @@ pub async fn register(captcha_answer: String, user: &User) -> Result<String, Err
 
     log::info!("Received response from discord account creation {}", body);
     //TODO add token to user
+
+    Ok(serde_json::from_str(&body)?)
+}
+pub async fn join_server(user: &User) -> Result<String, Error> {
+    let mut header_map = HeaderMap::new();
+    header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
+    header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
+    header_map.insert(AUTHORIZATION, user.discord_token.parse().unwrap()); //TODO memoize me
+
+    let client = Client::builder()
+        .cookie_store(true)
+        .default_headers(header_map)
+        .build()?;
+
+    let res = client.post(format!("https://discordapp.com/api/v6/invite/{}", DISCORD_INVITE_LINK).as_str())
+        .query(&("with_counts", "true"))
+        .send()
+        .await?;
+
+    let body = res
+        .text()
+        .await?;
+
+    log::info!("Received response from discord joining server {}", body);
 
     Ok(serde_json::from_str(&body)?)
 }
