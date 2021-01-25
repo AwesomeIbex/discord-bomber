@@ -16,7 +16,7 @@ impl User {
         let id = get_random_job_id();
         User {
             id: id.clone(),
-            email: format!("{}@baybabes.com", id), //TODO generate domains
+            email: format!("{}@baybabes.com", id.to_lowercase()), //TODO generate domains
             password: String::from("%q+zsQ4-"),
             auth_token: "".to_string(),
             captcha_key: "".to_string(),

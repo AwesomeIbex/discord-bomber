@@ -28,11 +28,13 @@ pub async fn get_token(user: &User) -> Result<Token, Error> {
     let res = client.post(format!("{}/authentication_token", MAIL_API_URL).as_str())
         .body(create_as_string.to_string())
         .send()
-        .await?
+        .await?;
+
+    let body = res
         .text()
         .await?;
 
-    Ok(serde_json::from_str(&res)?)
+    Ok(serde_json::from_str(&body)?)
 }
 
 #[cfg(test)]
