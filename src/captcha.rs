@@ -13,7 +13,7 @@ const TWO_CAPTCHA_API_KEY: &str = "";
 const TWO_CAPTCHA_URL: &str = "http://2captcha.com/in.php";
 
 pub async fn solve() -> Result<String, Error> {
-    log::info!("> Solving captcha..");
+    log::info!("Solving captcha..");
     let client = Client::builder()
         .cookie_store(true)
         .build()?;
@@ -33,26 +33,29 @@ pub async fn solve() -> Result<String, Error> {
         .map(|item| item.to_string())
         .collect::<Vec<String>>();
 
-    log::info!("> Received captcha query with results {:?}", response);
+    log::info!("Received captcha query with results {:?}", response);
 
     let captcha_id = response[1].clone();
 
-    log::info!("> Extracted captcha id {}", captcha_id);
+    log::info!("Extracted captcha id {}", captcha_id);
 
     let mut answer = check_answer(&client, &captcha_id).await?;
 
-    log::info!("> Checking initial captcha answer {}", answer);
+    log::info!("Checking initial captcha answer {}", answer);
 
     let mut counter = 0;
     while answer.contains("CAPCHA_NOT_READY") {
-        log::info!("> Checking captcha answer for the {} time {}", counter, answer);
+        log::info!("Checking captcha answer for the {} time {}", counter, answer);
 
         sleep(Duration::from_secs(5)).await;
         answer = check_answer(&client, &captcha_id).await?;
         counter += 1;
     }
 
-    Ok(answer)
+    let answer = answer.split("|")
+        .map(|item| item.to_string())
+        .collect::<Vec<String>>();
+    Ok(answer[1].clone())
 }
 
 async fn check_answer(client: &Client, captcha_id: &str) -> Result<String, Error> {

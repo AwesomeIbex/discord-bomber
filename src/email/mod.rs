@@ -32,10 +32,10 @@ impl EmailUser {
 }
 
 pub async fn create(user: &User) -> Result<CreateResponse, Error> {
-    log::info!("> Creating email user with id: {} and password {}..", user.id, user.password);
+    log::info!("Creating email user with id: {} and password {}..", user.id, user.password);
     Ok(create::create_email(user).await?)
 }
 pub async fn token(user: &User) -> Result<Token, Error> {
-    log::info!("> Retrieving user token..");
+    log::info!("Retrieving user token..");
     Ok(auth::get_token(user).await?)
 }

@@ -27,6 +27,12 @@ pub struct Register {
     pub captcha_key: String,
 }
 
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Token {
+    pub token: String,
+}
+
 impl Register {
     fn new(captcha_answer: String, user: &User) -> Register {
         Register {
@@ -65,9 +71,9 @@ pub async fn register(captcha_answer: String, user: &User) -> Result<String, Err
         .text()
         .await?;
 
+    log::info!("Received response from discord account creation {}", body);
     //TODO add token to user
 
-    // Ok(serde_json::from_str(&body)?)
-    Ok(String::new())
+    Ok(serde_json::from_str(&body)?)
 }
 
