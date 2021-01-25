@@ -3,7 +3,7 @@ use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, USER_AGENT as USER
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
-use crate::email::{MAIL_API_URL, User, USER_AGENT};
+use crate::email::{MAIL_API_URL, EmailUser, USER_AGENT};
 use crate::email::auth::Token;
 use crate::email::create::CreateResponse;
 
@@ -92,16 +92,21 @@ fn contains_verification_email(messages: ListMessages) -> bool {
 mod tests {
     use super::*;
     use crate::email::auth::get_token;
+    use crate::user::User;
 
     #[tokio::test]
     async fn test_list_messages() {
-        let token = get_token(User::new()).await.unwrap();
+        let user = User::new();
+        let email_user = EmailUser::new(&user);
+        let token = get_token(email_user).await.unwrap();
         assert_eq!(list_messages(token).await.unwrap().hydra_total_items, 1);
     }
 
     #[tokio::test]
     async fn test_contains_verification() {
-        let token = get_token(User::new()).await.unwrap();
+        let user = User::new();
+        let email_user = EmailUser::new(&user);
+        let token = get_token(email_user).await.unwrap();
         let messages = list_messages(token).await.unwrap();
         assert_eq!(contains_verification_email(messages), false);
     }

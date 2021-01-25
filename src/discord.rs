@@ -4,7 +4,8 @@ use reqwest::header::{CONNECTION, CONTENT_TYPE, HeaderMap, USER_AGENT as USER_AG
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, sleep};
 
-use crate::email::{USER_AGENT, User};
+use crate::email::{USER_AGENT, EmailUser};
+use crate::user::User;
 
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
@@ -27,12 +28,12 @@ pub struct Register {
 }
 
 impl Register {
-    fn new(captcha_answer: String, user: User) -> Register {
+    fn new(captcha_answer: String, user: &User) -> Register {
         Register {
             fingerprint: None,
-            email: user.address.clone(), // TODO dodgy, pull from better dto
-            username: format!("{}@baybabes.com", user.address), //TODO dodgy, pull from better dto
-            password: user.password,
+            email: user.email.clone(),
+            username: user.id.clone(), //TODO change to a random lookup dict for usernames
+            password: user.password.clone(),
             invite: None,
             consent: true,
             date_of_birth: "1990-10-17".to_string(), //TODO randomise me
@@ -43,7 +44,7 @@ impl Register {
 }
 
 
-pub async fn register(captcha_answer: String, user: User) -> Result<String, Error> {
+pub async fn register(captcha_answer: String, user: &User) -> Result<String, Error> {
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
     header_map.insert(CONNECTION, "keep-alive".parse().unwrap());
@@ -63,6 +64,8 @@ pub async fn register(captcha_answer: String, user: User) -> Result<String, Erro
     let body = res
         .text()
         .await?;
+
+    //TODO add token to user
 
     // Ok(serde_json::from_str(&body)?)
     Ok(String::new())

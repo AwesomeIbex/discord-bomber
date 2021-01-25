@@ -4,7 +4,7 @@ use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
 
 use crate::email::{MAIL_API_URL, USER_AGENT};
-use crate::email::User;
+use crate::email::EmailUser;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -106,7 +106,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_inspect_email() {
-        let token = get_token(User::new()).await.unwrap();
+        let token = get_token(EmailUser::new()).await.unwrap();
         let messages = list_messages(token.clone()).await.unwrap();
         let option = messages.hydra_member.first();
         let string = option.cloned().unwrap().id;
@@ -118,7 +118,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_extract_link() {
-        let token = get_token(User::new()).await.unwrap();
+        let token = get_token(EmailUser::new()).await.unwrap();
         let messages = list_messages(token.clone()).await.unwrap();
         let option = messages.hydra_member.first();
         let string = option.cloned().unwrap().id;

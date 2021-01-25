@@ -1,6 +1,10 @@
 use serde::{Serialize, Deserialize};
 use rand::Rng;
 use rand::distributions::Alphanumeric;
+use crate::user::User;
+use crate::email::create::CreateResponse;
+use anyhow::Error;
+use crate::email::auth::Token;
 
 mod create;
 mod list;
@@ -13,23 +17,23 @@ pub(crate) const USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64; rv:85.0) Ge
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct User {
+pub struct EmailUser {
     pub address: String,
     pub password: String,
 }
 
-impl User {
-    pub fn new() -> User {
-        User {
-            address: format!("{}@baybabes.com", get_random_job_id()), //TODO changeme
-            password: String::from("%q+zsQ4-"),
+impl EmailUser {
+    pub fn new(user: &User) -> EmailUser {
+        EmailUser {
+            address: user.email.to_string(),
+            password: user.password.to_string()
         }
     }
-
-
 }
 
-fn get_random_job_id() -> String {
-    let string = rand::thread_rng().sample_iter(&Alphanumeric).take(20).collect::<String>();
-    string
+pub async fn create(user: &User) -> Result<CreateResponse, Error> {
+    Ok(create::create_email(user).await?)
+}
+pub async fn token(user: &User) -> Result<Token, Error> {
+    Ok(auth::get_token(user).await?)
 }

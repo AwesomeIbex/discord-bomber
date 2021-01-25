@@ -6,17 +6,18 @@ use tokio::time::{Duration, sleep};
 
 use crate::discord::{DISCORD_SITE_KEY, DISCORD_REGISTER_URL};
 use crate::email::{MAIL_API_URL, USER_AGENT};
-use crate::email::User;
+use crate::email::EmailUser;
 
 //TODO read me from env
 const TWO_CAPTCHA_API_KEY: &str = "";
+const TWO_CAPTCHA_URL: &str = "http://2captcha.com/in.php";
 
-async fn solve() -> Result<String, Error> {
+pub async fn solve() -> Result<String, Error> {
     let client = Client::builder()
         .cookie_store(true)
         .build()?;
 
-    let captcha_id = client.post("http://2captcha.com/in.php")
+    let captcha_id = client.post(TWO_CAPTCHA_URL)
         .query(&[
             ("key", TWO_CAPTCHA_API_KEY),
             ("method", "userrecaptcha"),

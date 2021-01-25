@@ -2,8 +2,9 @@ use anyhow::Error;
 use reqwest::header::{CONTENT_TYPE, HeaderMap, USER_AGENT as USER_AGENT_PARAM};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
-use crate::email::User;
+use crate::email::EmailUser;
 use crate::email::{MAIL_API_URL, USER_AGENT};
+use crate::user::User;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -27,7 +28,7 @@ pub struct CreateResponse {
     pub updated_at: ::serde_json::Value,
 }
 
-async fn create_email() -> Result<CreateResponse, Error> {
+pub async fn create_email(user: &User) -> Result<CreateResponse, Error> {
     let client = reqwest::Client::builder();
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
@@ -37,7 +38,7 @@ async fn create_email() -> Result<CreateResponse, Error> {
     header_map.insert(CONTENT_TYPE, "application/json;charset=utf-8".parse().unwrap()); //TODO memoize me
     let client = client.default_headers(header_map).build()?;
 
-    let create_as_string = serde_json::json!(User::new());
+    let create_as_string = serde_json::json!(EmailUser::new(user));
     let res = client.post(format!("{}/accounts", MAIL_API_URL).as_str())
         .body(create_as_string.to_string())
         .send()
@@ -55,7 +56,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_user() {
-        assert_eq!(create_email().await.unwrap().address.as_str(), "sdkjsdhksadafj@baybabes.com")
+        assert_eq!(create_email(&User::new()).await.unwrap().address.as_str(), "sdkjsdhksadafj@baybabes.com")
     }
     #[tokio::test]
     async fn test_create_user_twenty() {
