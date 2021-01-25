@@ -60,7 +60,7 @@ mod tests {
     #[tokio::test]
     async fn test_create_user_twenty() {
         let mut emails = vec![];
-        for x in 0..20 {
+        for x in 0..1 {
             let x: i32 = x;
             let result = create_email().await;
             let response = result.unwrap();

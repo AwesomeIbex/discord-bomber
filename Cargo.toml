@@ -19,7 +19,7 @@ structopt = "0.3.20"
 async-trait = "0.1.42"
 json_dotpath = "1.0.3"
 csv = "1.1"
-reqwest = "0.11.0"
+reqwest = { version = "0.11.0", features = ["cookies"] }
 regex = "1.4.2"
 lazy_static = "1.4.0"
 rand = "0.7.3"

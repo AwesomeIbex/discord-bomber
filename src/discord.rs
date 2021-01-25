@@ -1,0 +1,70 @@
+use anyhow::Error;
+use reqwest::{Client, StatusCode};
+use reqwest::header::{CONNECTION, CONTENT_TYPE, HeaderMap, USER_AGENT as USER_AGENT_PARAM};
+use serde::{Deserialize, Serialize};
+use tokio::time::{Duration, sleep};
+
+use crate::email::{USER_AGENT, User};
+
+pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
+pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Register {
+    pub fingerprint: Option<String>,
+    pub email: String,
+    pub username: String,
+    pub password: String,
+    pub invite: Option<String>,
+    pub consent: bool,
+    #[serde(rename = "date_of_birth")]
+    pub date_of_birth: String,
+    #[serde(rename = "gift_code_sku_id")]
+    pub gift_code_sku_id: Option<String>,
+    #[serde(rename = "captcha_key")]
+    pub captcha_key: String,
+}
+
+impl Register {
+    fn new(captcha_answer: String, user: User) -> Register {
+        Register {
+            fingerprint: None,
+            email: user.address.clone(), // TODO dodgy, pull from better dto
+            username: format!("{}@baybabes.com", user.address), //TODO dodgy, pull from better dto
+            password: user.password,
+            invite: None,
+            consent: true,
+            date_of_birth: "1990-10-17".to_string(), //TODO randomise me
+            gift_code_sku_id: None,
+            captcha_key: captcha_answer
+        }
+    }
+}
+
+
+pub async fn register(captcha_answer: String, user: User) -> Result<String, Error> {
+    let mut header_map = HeaderMap::new();
+    header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
+    header_map.insert(CONNECTION, "keep-alive".parse().unwrap());
+    header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
+
+    let client = Client::builder()
+        .cookie_store(true)
+        .default_headers(header_map)
+        .build()?;
+
+    let create_as_string = serde_json::json!(Register::new(captcha_answer, user));
+    let res = client.post(DISCORD_REGISTER_URL)
+        .body(create_as_string.to_string())
+        .send()
+        .await?;
+
+    let body = res
+        .text()
+        .await?;
+
+    // Ok(serde_json::from_str(&body)?)
+    Ok(String::new())
+}
+
