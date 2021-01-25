@@ -85,6 +85,18 @@ async fn inspect_email(id: String, token: String) -> Result<Message, Error> {
     Ok(serde_json::from_str(&res)?)
 }
 
+fn extract_link(message: Message) -> String {
+    let link: Vec<&str> = message.text.split("Email: ").collect();
+    link.last().unwrap().to_string()
+}
+
+async fn verify(link: String) -> Result<bool, Error> {
+    let client = reqwest::Client::builder();
+    let client = client.build()?;
+    let res = client.get(&link);
+    Ok(res.send().await?.status().as_str() == "200")
+}
+
 #[cfg(test)]
 mod tests {
     use crate::email::auth::get_token;
@@ -102,5 +114,18 @@ mod tests {
         let message = result.unwrap();
         let x = message.subject.as_str();
         assert_eq!(x, "Dicks")
+    }
+
+    #[tokio::test]
+    async fn test_extract_link() {
+        let token = get_token(User::new()).await.unwrap();
+        let messages = list_messages(token.clone()).await.unwrap();
+        let option = messages.hydra_member.first();
+        let string = option.cloned().unwrap().id;
+        let result = inspect_email(string, token.token).await;
+        let message = result.unwrap();
+        let link = extract_link(message);
+        assert_eq!(link, "https://click.discord.com/ls/click?upn=qDOo8cnwIoKzt0aLL1cBeFE1RlVCKJFF5zAq8ml-2BFh1dq-2FeX22E9yMPFmLMSO5CYiXhp9YkD384yJYhq5wsezFhmc87h5D0tuuItagq0ug2xmbKhXO-2BSCoRC2t-2FujW1YBv-2FIKZ8vJeJSMJb2PQZlEoLTqLKklLUSoIN1D4HilF29pECfudDdGqGkwyQGpyvDLqKX0wLK42rvINpYIt4cZA-3D-3DqU1n_NyEJlP74kWzsE7McLQfgTaUKC7V3ZvWt7sET3kDzR1JioO9boTqIaISBDsiBMro3kPCdP9P6xMk98HyGTUpXrno2At8MHKd2-2BG5bDxOMj4icRrHs49otfrcyIHIRKTQGZQL5BdLHeRjdQfe-2B7YGKDpfqGyfuNCGbKCIw6Sr8TNEa1ioSqrITYNbup6xXcYcUVn4vEtffdVSORDoIAb-2B6bbksOn7K9IFUfsBSYYZy8XE-3D".to_string());
+        assert_eq!(verify(link).await.unwrap(), true);
     }
 }

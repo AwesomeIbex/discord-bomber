@@ -85,7 +85,7 @@ pub async fn list_messages(token: Token) -> Result<ListMessages, Error> {
 }
 
 fn contains_verification_email(messages: ListMessages) -> bool {
-    messages.hydra_member.iter().any(|member| member.from.address.contains("discord"))
+    messages.hydra_member.iter().any(|member| member.from.address.contains("noreply@discord.com"))
 }
 
 #[cfg(test)]

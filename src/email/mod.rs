@@ -22,7 +22,8 @@ impl User {
     pub fn new() -> User {
         User {
             address: format!("{}@baybabes.com", get_random_job_id()), //TODO changeme
-            password: String::from("stfutop"),
+            // address: String::from("topest1@baybabes.com"), //TODO changeme
+            password: String::from("%q+zsQ4-"),
         }
     }
 
