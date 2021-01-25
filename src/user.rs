@@ -15,7 +15,7 @@ impl User {
     pub fn new() -> User {
         let id = get_random_job_id();
         User {
-            id,
+            id: id.clone(),
             email: format!("{}@baybabes.com", id), //TODO generate domains
             password: String::from("%q+zsQ4-"),
             auth_token: "".to_string(),
@@ -48,9 +48,9 @@ impl User {
             ..self
         }
     }
+}
 
-    fn get_random_job_id() -> String {
-        let string = rand::thread_rng().sample_iter(&Alphanumeric).take(20).collect::<String>();
-        string
-    }
+fn get_random_job_id() -> String {
+    let string = rand::thread_rng().sample_iter(&Alphanumeric).take(20).collect::<String>();
+    string
 }

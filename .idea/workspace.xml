@@ -10,16 +10,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7e700380-9a5a-415a-a3fa-6d1fe67e7415" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/user.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/captcha.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/captcha.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/discord.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/discord.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/email/auth.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/email/auth.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/email/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/email/create.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/email/inspect.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/email/inspect.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/email/list.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/email/list.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/email/mod.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/email/mod.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/user.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,9 +45,9 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="org.rust.cargo.project.model.PROJECT_DISCOVERY" value="true" />
   </component>
-  <component name="RunManager" selected="Cargo.Test captcha::tests::test_create_user">
-    <configuration name="Test captcha::tests::test_create_user" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package discord-bomber --bin discord-bomber captcha::tests::test_create_user -- --exact" />
+  <component name="RunManager" selected="Cargo.Test email::list::tests::test_list_messages">
+    <configuration name="Test email::auth::tests::test_get_token" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package discord-bomber --bin discord-bomber email::auth::tests::test_get_token -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="allFeatures" value="false" />
@@ -91,20 +88,6 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
-    <configuration name="Test email::inspect::tests::test_inspect_email" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="test --package discord-bomber --bin discord-bomber email::inspect::tests::test_inspect_email -- --exact" />
-      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
-      <option name="channel" value="DEFAULT" />
-      <option name="allFeatures" value="false" />
-      <option name="emulateTerminal" value="false" />
-      <option name="backtrace" value="SHORT" />
-      <envs />
-      <option name="isRedirectInput" value="false" />
-      <option name="redirectInputPath" value="" />
-      <method v="2">
-        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
-      </method>
-    </configuration>
     <configuration name="Test email::list::tests::test_contains_verification" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
       <option name="command" value="test --package discord-bomber --bin discord-bomber email::list::tests::test_contains_verification -- --exact" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
@@ -119,13 +102,27 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Test email::list::tests::test_list_messages" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
+      <option name="command" value="test --package discord-bomber --bin discord-bomber email::list::tests::test_list_messages -- --exact" />
+      <option name="workingDirectory" value="file://$PROJECT_DIR$" />
+      <option name="channel" value="DEFAULT" />
+      <option name="allFeatures" value="false" />
+      <option name="emulateTerminal" value="false" />
+      <option name="backtrace" value="SHORT" />
+      <envs />
+      <option name="isRedirectInput" value="false" />
+      <option name="redirectInputPath" value="" />
+      <method v="2">
+        <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Cargo.Test captcha::tests::test_create_user" />
+        <item itemvalue="Cargo.Test email::list::tests::test_list_messages" />
+        <item itemvalue="Cargo.Test email::list::tests::test_contains_verification" />
+        <item itemvalue="Cargo.Test email::auth::tests::test_get_token" />
         <item itemvalue="Cargo.Test email::create::tests::test_create_user_twenty" />
         <item itemvalue="Cargo.Test email::inspect::tests::test_extract_link" />
-        <item itemvalue="Cargo.Test email::inspect::tests::test_inspect_email" />
-        <item itemvalue="Cargo.Test email::list::tests::test_contains_verification" />
       </list>
     </recent_temporary>
   </component>

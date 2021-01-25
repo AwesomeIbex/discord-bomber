@@ -97,16 +97,14 @@ mod tests {
     #[tokio::test]
     async fn test_list_messages() {
         let user = User::new();
-        let email_user = EmailUser::new(&user);
-        let token = get_token(email_user).await.unwrap();
+        let token = get_token(&user).await.unwrap();
         assert_eq!(list_messages(token).await.unwrap().hydra_total_items, 1);
     }
 
     #[tokio::test]
     async fn test_contains_verification() {
         let user = User::new();
-        let email_user = EmailUser::new(&user);
-        let token = get_token(email_user).await.unwrap();
+        let token = get_token(&user).await.unwrap();
         let messages = list_messages(token).await.unwrap();
         assert_eq!(contains_verification_email(messages), false);
     }

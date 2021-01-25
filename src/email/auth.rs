@@ -42,6 +42,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_token() {
-        assert_eq!(get_token(EmailUser::new(User::new())).await.unwrap().token.is_empty(), false)
+        let user = User::new();
+        assert_eq!(get_token(&user).await.unwrap().token.is_empty(), false)
     }
 }

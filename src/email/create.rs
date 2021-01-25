@@ -63,7 +63,7 @@ mod tests {
         let mut emails = vec![];
         for x in 0..1 {
             let x: i32 = x;
-            let result = create_email().await;
+            let result = create_email(&User::new()).await;
             let response = result.unwrap();
             let string = response.address;
             emails.push(string)

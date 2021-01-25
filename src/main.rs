@@ -28,7 +28,7 @@ async fn main() -> Result<(), Error> {
     user = user.with_captcha_key(&captcha_key);
 
     // Register with discord
-    let discord_token = discord::register(captcha_key, &User).await?;
+    let discord_token = discord::register(captcha_key, &user).await?;
 
     user = user.with_discord_token(&discord_token);
 

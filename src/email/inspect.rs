@@ -103,10 +103,13 @@ mod tests {
     use crate::email::list::list_messages;
 
     use super::*;
+    use crate::user::User;
 
     #[tokio::test]
     async fn test_inspect_email() {
-        let token = get_token(EmailUser::new()).await.unwrap();
+        let user = User::new();
+
+        let token = get_token(&user).await.unwrap();
         let messages = list_messages(token.clone()).await.unwrap();
         let option = messages.hydra_member.first();
         let string = option.cloned().unwrap().id;
@@ -118,7 +121,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_extract_link() {
-        let token = get_token(EmailUser::new()).await.unwrap();
+        let user = User::new();
+        let token = get_token(&user).await.unwrap();
         let messages = list_messages(token.clone()).await.unwrap();
         let option = messages.hydra_member.first();
         let string = option.cloned().unwrap().id;
