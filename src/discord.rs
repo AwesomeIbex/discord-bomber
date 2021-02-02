@@ -10,7 +10,7 @@ use crate::user::User;
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
 pub const DISCORD_LIST_GUILDS: &str = "https://discordapp.com/api/v6/users/@me/guilds";
-pub const DISCORD_INVITE_LINK: &str = "2bSHsn7c";
+pub const DISCORD_INVITE_LINK: &str = "VGrH2bnw";
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -40,7 +40,7 @@ impl Register {
         Register {
             fingerprint: None,
             email: user.email.clone(),
-            username: user.id.clone(), //TODO change to a random lookup dict for usernames
+            username: user.id.clone(),
             password: user.password.clone(),
             invite: None,
             consent: true,
@@ -84,7 +84,7 @@ pub async fn check_rate_limit(user: &User) -> Result<Token, Error> {
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
     header_map.insert(CONNECTION, "keep-alive".parse().unwrap());
     header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
-    header_map.insert(AUTHORIZATION, format!("Bearer {}", user.discord_token).parse().unwrap());
+    header_map.insert(AUTHORIZATION, user.discord_token.parse().unwrap());
 
     let client = Client::builder()
         .cookie_store(true)
@@ -114,7 +114,7 @@ pub async fn join_server(user: &User) -> Result<String, Error> {
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
     header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
-    header_map.insert(AUTHORIZATION, format!("Bearer {}", user.discord_token).parse().unwrap());
+    header_map.insert(AUTHORIZATION, user.discord_token.parse().unwrap());
 
     let client = Client::builder()
         .cookie_store(true)

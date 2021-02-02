@@ -14,6 +14,7 @@ pub struct User {
     pub email_token: String,
     pub discord_token: String,
     pub captcha_key: String,
+    pub joined_server: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -32,7 +33,8 @@ impl User {
             auth_token: "".to_string(),
             captcha_key: "".to_string(),
             email_token: "".to_string(),
-            discord_token: "".to_string()
+            discord_token: "".to_string(),
+            joined_server: false
         }
     }
 
@@ -55,12 +57,19 @@ impl User {
         let len = words.len();
         words_collected.push(words.get(rnd.gen_range(0, len)).unwrap().word.clone());
         words_collected.push(words.get(rnd.gen_range(0, len)).unwrap().word.clone());
+        words_collected.push(words.get(rnd.gen_range(0, len)).unwrap().word.clone());
 
         words_collected.join("")
     }
     pub fn with_auth_token(self, auth_token: &String) -> User {
         User {
             auth_token: auth_token.to_string(),
+            ..self
+        }
+    }
+    pub fn set_joined(self) -> User {
+        User {
+            joined_server: true,
             ..self
         }
     }

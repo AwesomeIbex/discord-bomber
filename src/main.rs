@@ -1,10 +1,13 @@
-use anyhow::Error;
+use std::fs::read_to_string;
+use std::path::Path;
 
-use crate::user::User;
+use anyhow::{Context, Error};
 use tokio::fs::File;
-use tokio::io::{BufWriter, AsyncWriteExt};
-use crate::discord::DISCORD_INVITE_LINK;
+use tokio::io::AsyncWriteExt;
+
 use crate::cli::get_opts_args;
+use crate::discord::DISCORD_INVITE_LINK;
+use crate::user::User;
 
 mod email;
 mod discord;
@@ -15,12 +18,13 @@ mod cli;
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     pretty_env_logger::init();
-
     let opts = get_opts_args();
 
+    let mut users = read_users().context("Failed to read users")?;
+
+    log::info!("Users found {:?}", users);
     let mut user = User::new(&opts);
 
-    let mut users = vec![];
     let email = email::create(&user).await?;
     log::info!("Created email user, response: {:?}", email);
 
@@ -36,34 +40,46 @@ async fn main() -> Result<(), Error> {
 
     user = user.with_captcha_key(&captcha_key);
 
-    //TODO check rate limit BEFORE getting captcha
-
     let discord_token = discord::register(captcha_key, &user).await?;
     log::info!("Retrieved discord auth token: {:?}", discord_token);
 
     users.push(user.clone());
 
-    write_to_file(&mut users).await?;
+    write_to_file(&mut users).await.unwrap();
 
-    // user = user.with_discord_token(&discord_token.token);
+    user = user.with_discord_token(&discord_token.token);
 
     log::info!("User updated");
 
-    // discord::join_server(&user).await?;
+    // TODO for each user that hasnt been joined, join the link
+    discord::join_server(&user).await?;
     log::info!("Joined discord server at {}", DISCORD_INVITE_LINK);
 
-    // Destroy
+    users = users.iter()
+        .map(|u| {
+            if u.id == user.id {
+                u.clone().set_joined()
+            } else {
+                u.clone()
+            }
+        }).collect();
 
+    // Destroy
 
     Ok(())
 }
 
-async fn write_to_file(u: &mut Vec<User>) -> Result<(), Error> {
-    let file = File::open("accounts.json").await?;
-    let mut writer = BufWriter::new(file);
+fn read_users() -> Result<Vec<User>, Error> {
+    let json_file_str = read_to_string(Path::new("accounts.json")).context("file not found")?;
+    let users: Vec<User> = serde_json::from_str(&json_file_str).context("error while reading json")?;
+    Ok(users)
+}
 
-    let string = serde_json::to_value(&u)?;
-    log::info!("Writing to file: {}", string);
-    let result = writer.write(string.to_string().as_bytes()).await.unwrap();
+async fn write_to_file(u: &mut Vec<User>) -> Result<(), Error> {
+    let mut file = tokio::fs::File::create("./accounts.json").await?;
+    let string = serde_json::to_string(&u)?;
+    log::debug!("Writing to file: {}", string);
+    file.write_all(string.as_bytes()).await?;
+    file.sync_all().await?;
     Ok(())
 }
