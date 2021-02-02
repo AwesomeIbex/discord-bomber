@@ -9,7 +9,7 @@ use crate::user::User;
 
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
-pub const DISCORD_INVITE_LINK: &str = "T7DFfqBu";
+pub const DISCORD_INVITE_LINK: &str = "2bSHsn7c";
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -78,6 +78,8 @@ pub async fn register(captcha_answer: String, user: &User) -> Result<Token, Erro
     Ok(serde_json::from_str(&body)?)
 }
 pub async fn join_server(user: &User) -> Result<String, Error> {
+    log::info!("Joining discord with user {:?}", user);
+
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
     header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
@@ -89,15 +91,16 @@ pub async fn join_server(user: &User) -> Result<String, Error> {
         .build()?;
 
     let res = client.post(format!("https://discordapp.com/api/v6/invite/{}", DISCORD_INVITE_LINK).as_str())
-        .query(&("with_counts", "true"))
+        // .query(&[("with_counts", "true")])
         .send()
         .await?;
+    log::info!("Received response from discord joining server {:?}", res);
 
     let body = res
         .text()
         .await?;
 
-    log::info!("Received response from discord joining server {}", body);
+    log::info!("Received body from discord joining server {:?}", body);
 
     Ok(serde_json::from_str(&body)?)
 }

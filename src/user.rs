@@ -1,6 +1,9 @@
-use rand::Rng;
+use rand::{Rng, RngCore};
 use rand::distributions::Alphanumeric;
 use serde::{Deserialize, Serialize};
+use crate::cli::Opts;
+use std::fs::File;
+use csv::Reader;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct User {
@@ -13,9 +16,15 @@ pub struct User {
     pub captcha_key: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct WordRecord {
+    word: String,
+}
+
 impl User {
-    pub fn new() -> User {
-        let id = get_random_job_id();
+    pub fn new(opts: &Opts) -> User {
+        let id = User::build_id(User::build_word_list());
+
         User {
             id: id.clone(),
             email: format!("{}@baybabes.com", id.to_lowercase()), //TODO generate domains
@@ -25,6 +34,29 @@ impl User {
             email_token: "".to_string(),
             discord_token: "".to_string()
         }
+    }
+
+    fn build_word_list() -> Vec<WordRecord> {
+        let mut file = File::open("words.csv").expect("Failed to open words"); //TODO fix me
+        let mut rdr = csv::Reader::from_reader(file);
+
+        let mut words = vec![];
+        for result in rdr.deserialize() {
+            let record: WordRecord = result.expect("Failed to read a word record");
+            words.push(record);
+        }
+        words
+    }
+    fn build_id(words: Vec<WordRecord>) -> String {
+        let mut rnd = rand::thread_rng();
+
+        let mut words_collected: Vec<String> = vec![];
+
+        let len = words.len();
+        words_collected.push(words.get(rnd.gen_range(0, len)).unwrap().word.clone());
+        words_collected.push(words.get(rnd.gen_range(0, len)).unwrap().word.clone());
+
+        words_collected.join("")
     }
     pub fn with_auth_token(self, auth_token: &String) -> User {
         User {
