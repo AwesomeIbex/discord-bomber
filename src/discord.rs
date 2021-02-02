@@ -9,6 +9,7 @@ use crate::user::User;
 
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
+pub const DISCORD_LIST_GUILDS: &str = "https://discordapp.com/api/v6/users/@me/guilds";
 pub const DISCORD_INVITE_LINK: &str = "2bSHsn7c";
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -77,13 +78,43 @@ pub async fn register(captcha_answer: String, user: &User) -> Result<Token, Erro
 
     Ok(serde_json::from_str(&body)?)
 }
+
+pub async fn check_rate_limit(user: &User) -> Result<Token, Error> {
+    let mut header_map = HeaderMap::new();
+    header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
+    header_map.insert(CONNECTION, "keep-alive".parse().unwrap());
+    header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
+    header_map.insert(AUTHORIZATION, format!("Bearer {}", user.discord_token).parse().unwrap());
+
+    let client = Client::builder()
+        .cookie_store(true)
+        .default_headers(header_map)
+        .build()?;
+
+    let res = client.get(DISCORD_LIST_GUILDS)
+        .send()
+        .await?;
+
+    log::info!("Response {:?}", res);
+
+    assert_ne!(res.status().as_u16(), 429);
+
+    let body = res
+        .text()
+        .await?;
+
+    log::info!("Received response from discord account creation {}", body);
+    //TODO add token to user
+
+    Ok(serde_json::from_str(&body)?)
+}
 pub async fn join_server(user: &User) -> Result<String, Error> {
     log::info!("Joining discord with user {:?}", user);
 
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
     header_map.insert(CONTENT_TYPE, "application/json".parse().unwrap()); //TODO memoize me
-    header_map.insert(AUTHORIZATION, user.discord_token.parse().unwrap()); //TODO memoize me
+    header_map.insert(AUTHORIZATION, format!("Bearer {}", user.discord_token).parse().unwrap());
 
     let client = Client::builder()
         .cookie_store(true)

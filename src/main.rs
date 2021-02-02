@@ -31,15 +31,15 @@ async fn main() -> Result<(), Error> {
 
     //TODO test for rate limiting first
 
-    // let captcha_key = captcha::solve().await?;
-    // log::info!("Retrieved captcha key: {:?}", captcha_key);
-    //
-    // user = user.with_captcha_key(&captcha_key);
-    //
-    // //TODO check rate limit BEFORE getting captcha
-    //
-    // let discord_token = discord::register(captcha_key, &user).await?;
-    // log::info!("Retrieved discord auth token: {:?}", discord_token);
+    let captcha_key = captcha::solve().await?;
+    log::info!("Retrieved captcha key: {:?}", captcha_key);
+
+    user = user.with_captcha_key(&captcha_key);
+
+    //TODO check rate limit BEFORE getting captcha
+
+    let discord_token = discord::register(captcha_key, &user).await?;
+    log::info!("Retrieved discord auth token: {:?}", discord_token);
 
     users.push(user.clone());
 
