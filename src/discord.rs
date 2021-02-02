@@ -74,9 +74,10 @@ pub async fn register(captcha_answer: String, user: &User) -> Result<Token, Erro
         .await?;
 
     log::info!("Received response from discord account creation {}", body);
-    //TODO add token to user
 
-    Ok(serde_json::from_str(&body)?)
+    let token = serde_json::from_str(&body)?;
+    log::info!("Retrieved discord auth token: {:?}", token);
+    Ok(token)
 }
 
 pub async fn check_rate_limit(user: &User) -> Result<Token, Error> {
@@ -133,6 +134,9 @@ pub async fn join_server(user: &User) -> Result<String, Error> {
 
     log::info!("Received body from discord joining server {:?}", body);
 
-    Ok(serde_json::from_str(&body)?)
+    let join_result = serde_json::from_str(&body)?;
+    log::info!("Joined discord server at {}", DISCORD_INVITE_LINK);
+
+    Ok(join_result)
 }
 

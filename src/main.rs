@@ -21,50 +21,40 @@ async fn main() -> Result<(), Error> {
     let opts = get_opts_args();
 
     let mut users = read_users().context("Failed to read users")?;
-
     log::info!("Users found {:?}", users);
-    let mut user = User::new(&opts);
 
-    let email = email::create(&user).await?;
-    log::info!("Created email user, response: {:?}", email);
+    let mut user = User::new(&opts);
+    email::create(&user).await?;
 
     let token = email::token(&user).await?;
-    log::info!("Retrieved email token, response: {:?}", token);
-
     user = user.with_email_token(&token.token);
 
     //TODO test for rate limiting first
 
     let captcha_key = captcha::solve().await?;
-    log::info!("Retrieved captcha key: {:?}", captcha_key);
-
     user = user.with_captcha_key(&captcha_key);
 
     let discord_token = discord::register(captcha_key, &user).await?;
-    log::info!("Retrieved discord auth token: {:?}", discord_token);
+    user = user.with_discord_token(&discord_token.token);
+
 
     users.push(user.clone());
-
     write_to_file(&mut users).await.unwrap();
-
-    user = user.with_discord_token(&discord_token.token);
 
     log::info!("User updated");
 
-    // TODO for each user that hasnt been joined, join the link
+    // TODO for each user that hasnt joined, join the link
     discord::join_server(&user).await?;
-    log::info!("Joined discord server at {}", DISCORD_INVITE_LINK);
 
     users = users.iter()
         .map(|u| {
             if u.id == user.id {
+                log::info!("Updating {:?} to joined", u);
                 u.clone().set_joined()
             } else {
                 u.clone()
             }
         }).collect();
-
-    // Destroy
 
     Ok(())
 }

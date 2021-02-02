@@ -33,9 +33,13 @@ impl EmailUser {
 
 pub async fn create(user: &User) -> Result<CreateResponse, Error> {
     log::info!("Creating email user with id: {} and password {}..", user.id, user.password);
-    Ok(create::create_email(user).await?)
+    let response = create::create_email(user).await?;
+    log::debug!("Created email user, response: {:?}", response);
+    Ok(response)
 }
 pub async fn token(user: &User) -> Result<Token, Error> {
     log::info!("Retrieving user token..");
-    Ok(auth::get_token(user).await?)
+    let token = auth::get_token(user).await?;
+    log::info!("Retrieved email token, response: {:?}", token);
+    Ok(token)
 }

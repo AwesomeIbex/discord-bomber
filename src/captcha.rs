@@ -55,7 +55,9 @@ pub async fn solve() -> Result<String, Error> {
     let answer = answer.split("|")
         .map(|item| item.to_string())
         .collect::<Vec<String>>();
-    Ok(answer[1].clone())
+    let captcha = answer[1].clone();
+    log::info!("Retrieved captcha key: {:?}", captcha);
+    Ok(captcha)
 }
 
 async fn check_answer(client: &Client, captcha_id: &str) -> Result<String, Error> {
