@@ -10,7 +10,6 @@ pub struct User {
     pub id: String,
     pub email: String,
     pub password: String,
-    pub auth_token: String,
     pub email_token: String,
     pub discord_token: String,
     pub captcha_key: String,
@@ -30,7 +29,6 @@ impl User {
             id: id.clone(),
             email: format!("{}@baybabes.com", id.to_lowercase()), //TODO generate domains
             password: String::from("%q+zsQ4-"),
-            auth_token: "".to_string(),
             captcha_key: "".to_string(),
             email_token: "".to_string(),
             discord_token: "".to_string(),
@@ -60,12 +58,6 @@ impl User {
         words_collected.push(words.get(rnd.gen_range(0, len)).unwrap().word.clone());
 
         words_collected.join("")
-    }
-    pub fn with_auth_token(self, auth_token: &String) -> User {
-        User {
-            auth_token: auth_token.to_string(),
-            ..self
-        }
     }
     pub fn set_joined(self) -> User {
         User {
