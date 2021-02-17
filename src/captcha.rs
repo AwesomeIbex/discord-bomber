@@ -9,7 +9,7 @@ use crate::email::{MAIL_API_URL, USER_AGENT};
 use crate::email::EmailUser;
 
 //TODO read me from env
-const TWO_CAPTCHA_API_KEY: &str = "";
+const TWO_CAPTCHA_API_KEY: &str = "11f5b985cfe179641a87f5879926eb72";
 const TWO_CAPTCHA_URL: &str = "http://2captcha.com/in.php";
 
 pub async fn solve() -> Result<String, Error> {
