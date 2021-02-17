@@ -3,7 +3,7 @@ name: Build and upload binaries to release
 on:
   create:
     tags:
-      - h*
+    - h*
 
 jobs:
   release:
