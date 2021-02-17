@@ -21,7 +21,7 @@ async fn main() -> Result<(), Error> {
     let opts = get_opts_args();
 
     let mut users = read_users().context("Failed to read users")?;
-    log::info!("Users found {:?}", users);
+    log::trace!("Users found {:?}", users);
 
     let mut user = User::new(&opts);
     email::create(&user).await?;
