@@ -39,8 +39,9 @@ pub async fn create_email(user: &User) -> Result<CreateResponse, Error> {
     let client = client.default_headers(header_map).build()?;
 
     let create_as_string = serde_json::json!(EmailUser::new(user));
+    let string = create_as_string.to_string();
     let res = client.post(format!("{}/accounts", MAIL_API_URL).as_str())
-        .body(create_as_string.to_string())
+        .body(string)
         .send()
         .await?
         .text()

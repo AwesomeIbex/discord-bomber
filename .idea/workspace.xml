@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
+    <generated />
+  </component>
   <component name="CMakeSettings">
     <configurations>
       <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" ENABLED="true" />
@@ -10,10 +13,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7e700380-9a5a-415a-a3fa-6d1fe67e7415" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.github/workflows/build.yml" beforeDir="false" afterPath="$PROJECT_DIR$/.github/workflows/build.yml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/words.csv" beforeDir="false" afterPath="$PROJECT_DIR$/words.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/email/create.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/email/create.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/user.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/user.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -105,7 +107,7 @@
       </method>
     </configuration>
     <configuration name="run" type="CargoCommandRunConfiguration" factoryName="Cargo Command" temporary="true">
-      <option name="command" value="run --package discord-bomber --bin discord-bomber" />
+      <option name="command" value="run --package discord-bomber --bin discord-bomber -- --accounts 10 --invite_link yooooo" />
       <option name="workingDirectory" value="file://$PROJECT_DIR$" />
       <option name="channel" value="DEFAULT" />
       <option name="allFeatures" value="false" />
@@ -118,6 +120,13 @@
         <option name="CARGO.BUILD_TASK_PROVIDER" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Cargo.run" />
+      <item itemvalue="Cargo.Run discord-bomber" />
+      <item itemvalue="Cargo.Test email::create::tests::test_create_user" />
+      <item itemvalue="Cargo.Test email::list::tests::test_contains_verification" />
+      <item itemvalue="Cargo.Test email::list::tests::test_list_messages" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Cargo.run" />
@@ -167,6 +176,11 @@
           <url>file://$PROJECT_DIR$/src/email/auth.rs</url>
           <line>26</line>
           <option name="timeStamp" value="12" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="com.jetbrains.cidr.execution.debugger.OCBreakpointType">
+          <url>file://$PROJECT_DIR$/src/email/create.rs</url>
+          <line>42</line>
+          <option name="timeStamp" value="14" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -27,7 +27,7 @@ impl User {
 
         User {
             id: id.clone(),
-            email: format!("{}@baybabes.com", id.to_lowercase()), //TODO generate domains
+            email: format!("{}@maxresistance.com", id.to_lowercase()), //TODO generate domains
             password: String::from("%q+zsQ4-"),
             captcha_key: "".to_string(),
             email_token: "".to_string(),
