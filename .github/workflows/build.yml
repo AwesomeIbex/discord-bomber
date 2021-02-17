@@ -38,9 +38,3 @@ jobs:
         with:
           command: build
           args: --release --all-features
-      - name: Run binary
-        run: ls -l
-      - name: Run binary
-        run: ls -l target
-      - name: Run binary
-        run: RUST_LOG=debug ./target/release/discord-bomber --accounts 10 --invite_link PEd4HWYs

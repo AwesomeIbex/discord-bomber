@@ -1,0 +1,25 @@
+name: Build and upload binaries to release
+
+on:
+  create:
+    tags:
+    - h*
+
+jobs:
+  run:
+    name: Run
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: tasky-api
+            asset_name: tasky-api-linux-amd64
+          - os: macos-latest
+            artifact_name: tasky-api
+            asset_name: tasky-api-macos-amd64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Run binary
+        run: RUST_LOG=debug .discord-bomber --accounts 10 --invite_link PEd4HWYs
