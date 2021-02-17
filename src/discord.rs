@@ -10,7 +10,7 @@ use crate::user::User;
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
 pub const DISCORD_LIST_GUILDS: &str = "https://discordapp.com/api/v6/users/@me/guilds";
-pub const DISCORD_INVITE_LINK: &str = "PEd4HWYs";
+pub const DISCORD_INVITE_LINK: &str = "nYhFDfuC";
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
