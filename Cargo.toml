@@ -1,0 +1,27 @@
+[package]
+name = "discord-bomber"
+version = "0.1.0"
+authors = ["don <donovandall@icloud.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+log = "0.4"
+pretty_env_logger = "0.4"
+tokio = { version = "1.1.1", features = ["full"] }
+serde = { version = "1.0.117", features = ["derive"] }
+serde_json = "1.0.59"
+futures = "0.3.8"
+rayon = "1.5.0"
+anyhow = "1.0.34"
+structopt = "0.3.20"
+async-trait = "0.1.42"
+json_dotpath = "1.0.3"
+reqwest = { version = "0.11.0", default_features = false, features = ["cookies", "native-tls-vendored"] }
+regex = "1.4.2"
+lazy_static = "1.4.0"
+rand = "0.7.3"
+csv = "1.1.5"
+cached = "0.23.0"
+discord = { git = "https://github.com/SpaceManiac/discord-rs" }

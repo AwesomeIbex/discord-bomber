@@ -1,0 +1,45 @@
+name: Build and upload binaries to release
+
+on:
+  push:
+#  create:
+#    tags:
+#    - h*
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: tasky-api
+            asset_name: tasky-api-linux-amd64
+          - os: macos-latest
+            artifact_name: tasky-api
+            asset_name: tasky-api-macos-amd64
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: Swatinem/rust-cache@v1
+#      - name: Cache cargo bin
+#        uses: actions/cache@v2
+#        with:
+#          path: |
+#            ~/.cargo/registry
+#            ~/.cargo/git
+#            target
+#          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+      - name: Build project
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+#          args: --release --all-features
+      - name: Run binary
+#        run: RUST_LOG=debug ./target/release/discord-bomber --accounts 10 --invite_link PEd4HWYs
+        run: RUST_LOG=debug ./target/debug/discord-bomber --accounts 10 --invite_link PEd4HWYs
