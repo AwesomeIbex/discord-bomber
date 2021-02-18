@@ -19,19 +19,13 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: Swatinem/rust-cache@v1
-#      - name: Cache cargo bin
-#        uses: actions/cache@v2
-#        with:
-#          path: |
-#            ~/.cargo/registry
-#            ~/.cargo/git
-#            target
-#          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           override: true
+      - uses: Swatinem/rust-cache@v1
+        with:
+          working-directory: .
       - name: Build project
         uses: actions-rs/cargo@v1
         env:
