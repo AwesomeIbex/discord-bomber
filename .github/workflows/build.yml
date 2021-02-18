@@ -16,9 +16,6 @@ jobs:
           - os: ubuntu-latest
             artifact_name: tasky-api
             asset_name: tasky-api-linux-amd64
-          - os: macos-latest
-            artifact_name: tasky-api
-            asset_name: tasky-api-macos-amd64
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
