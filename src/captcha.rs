@@ -11,7 +11,7 @@ use crate::email::EmailUser;
 
 //TODO read me from env
 const TWO_CAPTCHA_URL: &str = "http://2captcha.com/in.php";
-const TWO_CATPCHA_API_ENV_KEY: &str = "TWO_CATPCHA_API_KEY";
+const TWO_CATPCHA_API_ENV_KEY: &str = "TWO_CAPTCHA_API_KEY";
 
 #[cached]
 fn get_api_key() -> String {
