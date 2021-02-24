@@ -1,13 +1,13 @@
 use anyhow::{Context, Error};
 use cached::proc_macro::cached;
+use discord::model::Message;
+use itertools::Itertools;
 use reqwest::{Client, StatusCode};
 use reqwest::header::{AUTHORIZATION, CONNECTION, CONTENT_TYPE, HeaderMap, HeaderValue, USER_AGENT as USER_AGENT_PARAM};
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, sleep};
-
 use crate::email::{EmailUser, USER_AGENT};
 use crate::user::User;
-use discord::model::Message;
 
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
@@ -38,6 +38,46 @@ pub struct Register {
 #[serde(rename_all = "camelCase")]
 pub struct Token {
     pub token: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ChannelMessage {
+    pub id: String,
+    pub author: Author,
+    pub mentions: Vec<Mention>,
+    pub pinned: bool,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Mention {
+    pub id: String,
+    pub username: String,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Author {
+    pub id: String,
+    pub username: String,
+    pub avatar: Option<String>,
+    pub discriminator: String,
+    #[serde(rename = "public_flags")]
+    pub public_flags: i64,
+    pub bot: Option<bool>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateDm {
+    pub recipients: Vec<String>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateChannelResponse {
+    pub id: String,
 }
 
 #[cached]
@@ -165,6 +205,82 @@ pub async fn spam_rick_roll(user: &User) -> Result<String, Error> {
     log::info!("{}", body);
 
     Ok(body)
+}
+
+pub async fn dm_everybody(user: &User) -> Result<Vec<ChannelMessage>, Error> {
+    log::info!("Getting dms {:?}", user);
+
+    log::info!("Instantiating client");
+    let client = discord::Discord::from_user_token(&user.discord_token)?;
+    log::info!("Getting servers");
+    let servers = client.get_servers()?;
+    log::info!("Searching for first server");
+    let channel_id = servers
+        .first()
+        .context("Failed to find any working server")?
+        .id
+        .0;
+
+    let client = get_client(Some(user.discord_token.to_string()))?;
+
+    let mut messages: Vec<ChannelMessage> = vec![];
+
+    for _ in 0..3 {
+        // curl 'https://discord.com/api/v8/channels/793841573187813379/messages?limit=50' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/793832870674169878/804062298653458444' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'TE: Trailers'
+        // curl 'https://discord.com/api/v8/channels/793841573187813379/messages?before=814202986329931857&limit=50' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/793832870674169878/793841573187813379' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'
+        let res = if messages.is_empty() {
+            client.get(format!("https://discordapp.com/api/v8/channels/{}/messages", channel_id).as_str())
+                .query(&["limit", 100])
+                .send()
+                .await?
+        } else {
+            client.get(format!("https://discordapp.com/api/v8/channels/{}/messages", channel_id).as_str())
+                .query(&[("limit", 100), ("before", messages.last().unwrap().clone().id)])
+                .send()
+                .await?
+        };
+
+        let mut channel_messages: Vec<ChannelMessage> = res
+            .json()
+            .await?;
+        messages.append(&mut channel_messages);
+    }
+
+    let mention_ids = messages.iter().map(|msg| msg.mentions.iter().map(|mnt| mnt.id)).collect::<Vec<String>>();
+    let user_ids = messages.iter().map(|msg| msg.mentions.iter().map(|mnt| mnt.id)).collect::<Vec<String>>();
+
+    let ids = mention_ids
+        .iter()
+        .zip(user_ids)
+        .flatten()
+        .unique()
+        .collect::<Vec<String>>();
+
+
+    let futures = ids
+        .iter()
+        .map(|id| {
+            let json = serde_json::json!(CreateDm {
+                recipients: vec![id]
+            });
+            client.post("https://discord.com/api/v8/users/@me/channels")
+                .body(json.to_string())
+                .send()
+        });
+
+    let results = futures::future::join_all(futures).await
+        .iter()
+        .filter(|res| res.is_ok())
+        .map(|res| res.unwrap())
+        .map(|response| );
+    // curl 'https://discord.com/api/v8/users/@me/channels' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Content-Type: application/json' -H 'X-Context-Properties: e30=' -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Origin: https://discord.com' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/793832870674169878/793841573187813379' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'TE: Trailers' --data-raw '{"recipients":["706231967829590157"]}'
+    // the above is the handshake and u get a response like this with new channel id
+    // {"id": "814236941519683584", "type": 1, "last_message_id": null, "recipients": [{"id": "706231967829590157", "username": "quima", "avatar": "9b2c46d4f9a6e62f444f80ef99e90131", "discriminator": "3290", "public_flags": 0}]}
+
+    // Then you just post to messages like that
+    //curl 'https://discord.com/api/v8/channels/780477491365675048/messages' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Content-Type: application/json' -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Origin: https://discord.com' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/@me/780477491365675048' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'TE: Trailers' --data-raw '{"content":"test","nonce":"814236163790340096","tts":false}'
+
+    Ok(messages)
 }
 
 pub async fn join_server(user: &User) -> Result<String, Error> {

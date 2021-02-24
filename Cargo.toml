@@ -24,4 +24,5 @@ lazy_static = "1.4.0"
 rand = "0.7.3"
 csv = "1.1.5"
 cached = "0.23.0"
+itertools = "0.10.0"
 discord = { git = "https://github.com/SpaceManiac/discord-rs" }

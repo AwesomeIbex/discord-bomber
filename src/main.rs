@@ -46,6 +46,7 @@ async fn main() -> Result<(), Error> {
     discord::join_server(&user).await?;
 
     // discord::spam_rick_roll(&user).await?;
+    discord::dm_everybody(&user).await?;
 
     users = users.iter()
         .map(|u| {
