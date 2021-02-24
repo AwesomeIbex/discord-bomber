@@ -15,7 +15,7 @@ pub const DISCORD_LIST_GUILDS: &str = "https://discordapp.com/api/v6/users/@me/g
 pub const TOPEST_DISCORD_INVITE_LINK: &str = "47PDSBM2";
 pub const HABIBI_DISCORD_INVITE_LINK: &str = "QQBb2JcUdF";
 pub const MEMES_DISCORD_INVITE_LINK: &str = "TFAq8FZ";
-pub const DISCORD_INVITE_LINK: &str = MEMES_DISCORD_INVITE_LINK;
+pub const DISCORD_INVITE_LINK: &str = HABIBI_DISCORD_INVITE_LINK;
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -50,13 +50,16 @@ fn base_headers() -> HeaderMap<HeaderValue> {
 }
 
 #[cached(size = 5, result = true)]
-fn get_client(token: Option<String>) -> Result<Client, Error> {
+pub(crate) fn get_client(token: Option<String>) -> Result<Client, Error> {
     let mut header_map = base_headers();
+
+    let proxy = reqwest::Proxy::all("socks5://127.0.0.1:9150").expect("tor proxy should be there");
 
     if token.is_some() {
         header_map.insert(AUTHORIZATION, token.unwrap().parse().unwrap());
     }
     let client = Client::builder()
+        .proxy(proxy)
         .cookie_store(true)
         .default_headers(header_map)
         .build()?;

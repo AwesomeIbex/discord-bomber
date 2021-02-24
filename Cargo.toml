@@ -18,7 +18,7 @@ anyhow = "1.0.34"
 structopt = "0.3.20"
 async-trait = "0.1.42"
 json_dotpath = "1.0.3"
-reqwest = { version = "0.11.0", default_features = false, features = ["cookies", "native-tls-vendored"] }
+reqwest = { version = "0.11.0", default_features = false, features = ["cookies", "native-tls-vendored", "socks"] }
 regex = "1.4.2"
 lazy_static = "1.4.0"
 rand = "0.7.3"

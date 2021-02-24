@@ -1,0 +1,1 @@
+docker run -d --restart=always -v "$(pwd)/torrc":/etc/tor/torrc --name tor-socks-proxy -p 127.0.0.1:9150:9150/tcp peterdavehello/tor-socks-proxy:latest

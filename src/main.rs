@@ -28,7 +28,7 @@ async fn main() -> Result<(), Error> {
     let token = email::token(&user).await?;
     user = user.with_email_token(&token.token);
 
-    //TODO test for rate limiting first
+    check_tor().await?;
 
     let captcha_key = captcha::solve().await?;
     user = user.with_captcha_key(&captcha_key);
@@ -59,6 +59,20 @@ async fn main() -> Result<(), Error> {
 
     write_to_file(&mut users).await.unwrap();
 
+    Ok(())
+}
+
+async fn check_tor() -> Result<(), Error> {
+    let tor_client = discord::get_client(None).unwrap();
+
+    let res = tor_client.get("https://check.torproject.org").send().await?;
+    println!("Status: {}", res.status());
+
+    let text = res.text().await?;
+    let is_tor = text.contains("Congratulations. This browser is configured to use Tor.");
+    if !is_tor {
+        return Err(anyhow::anyhow!("Isnt tor connected"))
+    }
     Ok(())
 }
 
