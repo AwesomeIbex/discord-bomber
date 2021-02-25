@@ -40,15 +40,15 @@ pub async fn solve() -> Result<String, Error> {
         .map(|item| item.to_string())
         .collect::<Vec<String>>();
 
-    log::info!("Received captcha query with results {:?}", response);
+    log::debug!("Received captcha query with results {:?}", response);
 
     let captcha_id = response[1].clone();
 
-    log::info!("Extracted captcha id {}", captcha_id);
+    log::debug!("Extracted captcha id {}", captcha_id);
 
     let mut answer = check_answer(&client, &captcha_id).await?;
 
-    log::info!("Checking initial captcha answer {}", answer);
+    log::debug!("Checking initial captcha answer {}", answer);
 
     let mut counter = 0;
     while answer.contains("CAPCHA_NOT_READY") {
@@ -63,7 +63,7 @@ pub async fn solve() -> Result<String, Error> {
         .map(|item| item.to_string())
         .collect::<Vec<String>>();
     let captcha = answer[1].clone();
-    log::info!("Retrieved captcha key: {:?}", captcha);
+    log::debug!("Retrieved captcha key: {:?}", captcha);
     Ok(captcha)
 }
 

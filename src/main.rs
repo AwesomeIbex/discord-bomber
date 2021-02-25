@@ -1,5 +1,4 @@
 #![feature(impl_trait_in_bindings)]
-
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -39,28 +38,33 @@ async fn main() -> Result<(), Error> {
     user = user.with_discord_token(&discord_token.token);
 
 
-    users.push(user.clone());
-    write_to_file(&mut users).await.unwrap();
+    let verified = email::verify(&user).await?;
 
-    log::info!("User updated");
+    if verified {
+        users.push(user.clone());
+        write_to_file(&mut users).await.unwrap();
 
-    // TODO for each user that hasnt joined, join the link
-    discord::join_server(&user).await?;
+        log::info!("User updated");
 
-    // discord::spam_rick_roll(&user).await?;
-    discord::dm_everybody(&user).await?;
+        // TODO for each user that hasnt joined, join the link
+        discord::join_server(&user).await?;
 
-    users = users.iter()
-        .map(|u| {
-            if u.id == user.id {
-                log::info!("Updating {:?} to joined", u);
-                u.clone().set_joined()
-            } else {
-                u.clone()
-            }
-        }).collect();
+        // discord::spam_rick_roll(&user).await?;
+        discord::dm_everybody(&user).await?;
 
-    write_to_file(&mut users).await.unwrap();
+        users = users.iter()
+            .map(|u| {
+                if u.id == user.id {
+                    log::info!("Updating {:?} to joined", u);
+                    u.clone().set_joined()
+                } else {
+                    u.clone()
+                }
+            }).collect();
+
+        write_to_file(&mut users).await.unwrap();
+
+    }
 
     Ok(())
 }

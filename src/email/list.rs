@@ -64,7 +64,7 @@ pub struct To {
     pub name: String,
 }
 
-pub async fn list_messages(token: Token) -> Result<ListMessages, Error> {
+pub async fn list_messages(token: &String) -> Result<ListMessages, Error> {
     let client = reqwest::Client::builder();
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
@@ -72,7 +72,7 @@ pub async fn list_messages(token: Token) -> Result<ListMessages, Error> {
     header_map.insert("Referer", "https://mail.tm/en".parse().unwrap());
     header_map.insert("TE", "Trailers".parse().unwrap());
     header_map.insert(CONTENT_TYPE, "application/json;charset=utf-8".parse().unwrap()); //TODO memoize me
-    header_map.insert(AUTHORIZATION, format!("Bearer {}", token.token).parse().unwrap()); //TODO memoize me
+    header_map.insert(AUTHORIZATION, format!("Bearer {}", token).parse().unwrap()); //TODO memoize me
     let client = client.default_headers(header_map).build()?;
 
     let res = client.get(format!("{}/messages", MAIL_API_URL).as_str())

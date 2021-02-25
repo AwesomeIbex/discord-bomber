@@ -1,4 +1,4 @@
-use anyhow::Error;
+use anyhow::{Error, Context};
 use reqwest::header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, USER_AGENT as USER_AGENT_PARAM};
 use reqwest::StatusCode;
 use serde::{Deserialize, Serialize};
@@ -60,7 +60,7 @@ pub struct To {
     pub name: String,
 }
 
-async fn inspect_email(id: String, token: String) -> Result<Message, Error> {
+pub(crate) async fn inspect_email(id: String, token: &String) -> Result<Message, Error> {
     let client = reqwest::Client::builder();
     let mut header_map = HeaderMap::new();
     header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
@@ -85,14 +85,20 @@ async fn inspect_email(id: String, token: String) -> Result<Message, Error> {
     Ok(serde_json::from_str(&res)?)
 }
 
-fn extract_link(message: Message) -> String {
+pub(crate) fn extract_link(message: Message) -> Result<String, Error> {
     let link: Vec<&str> = message.text.split("Email: ").collect();
-    link.last().unwrap().to_string()
+    Ok(link.last().context("Failed to get the last part of the link")?.to_string())
 }
 
-async fn verify(link: String) -> Result<bool, Error> {
+pub(crate) async fn verify(link: String) -> Result<bool, Error> {
     let client = reqwest::Client::builder();
-    let client = client.build()?;
+    let mut header_map = HeaderMap::new();
+    header_map.insert(USER_AGENT_PARAM, USER_AGENT.parse().unwrap());
+    header_map.insert("Origin", "https://mail.tm".parse().unwrap());
+    header_map.insert("Referer", "https://mail.tm/en".parse().unwrap());
+    header_map.insert("Connection", "Keep-Alive".parse().unwrap());
+    header_map.insert(CONTENT_TYPE, "application/json;charset=utf-8".parse().unwrap()); //TODO memoize me
+    let client = client.default_headers(header_map).build()?;
     let res = client.get(&link);
     Ok(res.send().await?.status().as_str() == "200")
 }

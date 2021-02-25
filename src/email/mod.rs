@@ -3,8 +3,9 @@ use rand::Rng;
 use rand::distributions::Alphanumeric;
 use crate::user::User;
 use crate::email::create::CreateResponse;
-use anyhow::Error;
+use anyhow::{Error, Context};
 use crate::email::auth::Token;
+use tokio::time::Duration;
 
 mod create;
 mod list;
@@ -40,6 +41,26 @@ pub async fn create(user: &User) -> Result<CreateResponse, Error> {
 pub async fn token(user: &User) -> Result<Token, Error> {
     log::info!("Retrieving user token..");
     let token = auth::get_token(user).await?;
-    log::info!("Retrieved email token, response: {:?}", token);
+    log::debug!("Retrieved email token, response: {:?}", token);
     Ok(token)
+}
+pub async fn verify(user: &User) -> Result<bool, Error> {
+    log::info!("Verifying user..");
+    log::info!("Listing messages..");
+    let mut messages = list::list_messages(&user.email_token).await?;
+    while messages.hydra_member.len() == 0 {
+        log::info!("Listing messages..");
+        messages = list::list_messages(&user.email_token).await?;
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+    log::info!("Getting first email..");
+    let option = messages.hydra_member.first();
+    let string = option.cloned().context("Failed to get the first email member")?.id;
+    log::info!("Inspecting email..");
+    let message = inspect::inspect_email(string, &user.email_token).await?;
+    log::info!("Extracting link..");
+    let link = inspect::extract_link(message)?;
+    log::info!("Verifying..");
+    let verify = inspect::verify(link).await?;
+    Ok(verify)
 }
