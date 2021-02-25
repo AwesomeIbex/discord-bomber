@@ -1,3 +1,5 @@
+#![feature(impl_trait_in_bindings)]
+
 use std::fs::read_to_string;
 use std::path::Path;
 

@@ -2,12 +2,14 @@ use anyhow::{Context, Error};
 use cached::proc_macro::cached;
 use discord::model::Message;
 use itertools::Itertools;
-use reqwest::{Client, StatusCode};
+use reqwest::{Client, StatusCode, Response};
 use reqwest::header::{AUTHORIZATION, CONNECTION, CONTENT_TYPE, HeaderMap, HeaderValue, USER_AGENT as USER_AGENT_PARAM};
 use serde::{Deserialize, Serialize};
 use tokio::time::{Duration, sleep};
 use crate::email::{EmailUser, USER_AGENT};
 use crate::user::User;
+use futures::SinkExt;
+use std::future::Future;
 
 pub const DISCORD_SITE_KEY: &str = "6Lef5iQTAAAAAKeIvIY-DeexoO3gj7ryl9rLMEnn";
 pub const DISCORD_REGISTER_URL: &str = "https://discordapp.com/api/v6/auth/register";
@@ -72,6 +74,14 @@ pub struct Author {
 #[serde(rename_all = "camelCase")]
 pub struct CreateDm {
     pub recipients: Vec<String>,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Dm {
+    pub content: String,
+    pub nonce: String,
+    pub tts: bool,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -208,71 +218,138 @@ pub async fn spam_rick_roll(user: &User) -> Result<String, Error> {
 }
 
 pub async fn dm_everybody(user: &User) -> Result<Vec<ChannelMessage>, Error> {
-    log::info!("Getting dms {:?}", user);
-
     log::info!("Instantiating client");
     let client = discord::Discord::from_user_token(&user.discord_token)?;
     log::info!("Getting servers");
     let servers = client.get_servers()?;
-    log::info!("Searching for first server");
-    let channel_id = servers
+    log::info!("Searching for first server from {:?}", servers);
+    let server_id = servers
         .first()
         .context("Failed to find any working server")?
-        .id
-        .0;
+        .id;
 
+    let channel_id: u64 = client.get_server_channels(server_id)?
+        .iter()
+        .filter(|channel| channel.name.eq("general") || channel.name.eq("introductions"))
+        .map(|channel| channel.id.0)
+        .collect::<Vec<u64>>()[0];
+
+    log::info!("Getting initial client");
     let client = get_client(Some(user.discord_token.to_string()))?;
 
     let mut messages: Vec<ChannelMessage> = vec![];
-
-    for _ in 0..3 {
+    for i in 0..3 {
         // curl 'https://discord.com/api/v8/channels/793841573187813379/messages?limit=50' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/793832870674169878/804062298653458444' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'TE: Trailers'
         // curl 'https://discord.com/api/v8/channels/793841573187813379/messages?before=814202986329931857&limit=50' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/793832870674169878/793841573187813379' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache'
         let res = if messages.is_empty() {
+            log::info!("Listing first 100 messages in channel {}", channel_id);
             client.get(format!("https://discordapp.com/api/v8/channels/{}/messages", channel_id).as_str())
-                .query(&["limit", 100])
+                .query(&[("limit", "100")])
                 .send()
                 .await?
         } else {
+            log::info!("Listing next 100 messages in channel {}", channel_id);
             client.get(format!("https://discordapp.com/api/v8/channels/{}/messages", channel_id).as_str())
-                .query(&[("limit", 100), ("before", messages.last().unwrap().clone().id)])
+                .query(&[("limit", "100"), ("before", &messages.last().unwrap().clone().id)])
                 .send()
                 .await?
         };
 
-        let mut channel_messages: Vec<ChannelMessage> = res
-            .json()
+        let channel_messages: String = res
+            .text()
             .await?;
+
+        log::info!("Deserialising messages {}", channel_messages);
+        let mut channel_messages: Vec<ChannelMessage> = serde_json::from_str(&channel_messages)?;
+
         messages.append(&mut channel_messages);
     }
 
-    let mention_ids = messages.iter().map(|msg| msg.mentions.iter().map(|mnt| mnt.id)).collect::<Vec<String>>();
-    let user_ids = messages.iter().map(|msg| msg.mentions.iter().map(|mnt| mnt.id)).collect::<Vec<String>>();
+    log::info!("Building mention ids");
+    let mut mention_ids = messages
+        .iter()
+        .flat_map(|msg| msg.mentions.iter().map(|mnt| mnt.id.to_string()).collect::<Vec<String>>())
+        .collect::<Vec<String>>();
+    log::info!("Building user ids");
+    let mut user_ids = messages
+        .iter()
+        .map(|msg| msg.author.id.to_string())
+        .collect::<Vec<String>>();
 
+    log::info!("Concatenating");
+    mention_ids.append(&mut user_ids);
+
+    log::info!("Sanitising");
     let ids = mention_ids
         .iter()
-        .zip(user_ids)
-        .flatten()
         .unique()
+        .cloned()
         .collect::<Vec<String>>();
 
 
-    let futures = ids
-        .iter()
-        .map(|id| {
-            let json = serde_json::json!(CreateDm {
-                recipients: vec![id]
+    log::info!("Opening initial dm channels");
+    let mut futures = vec![];
+    for id in ids {
+        log::info!("Opening initial dm channel with {}", id);
+        let json = serde_json::json!(CreateDm {
+                recipients: vec![id.clone()]
             });
-            client.post("https://discord.com/api/v8/users/@me/channels")
-                .body(json.to_string())
-                .send()
-        });
+        let future = client.post("https://discord.com/api/v8/users/@me/channels")
+            .body(json.to_string())
+            .send();
+        futures.push(future);
+    }
+    log::info!("Sending {} dm channel requests", futures.len());
+    let results: Vec<Result<Response, reqwest::Error>> = futures::future::join_all(futures).await;
 
-    let results = futures::future::join_all(futures).await
-        .iter()
-        .filter(|res| res.is_ok())
-        .map(|res| res.unwrap())
-        .map(|response| );
+    log::info!("Building results");
+    let mut futures = vec![];
+    for result in results {
+        if let Ok(response) = result {
+            futures.push(response.text())
+        }
+    }
+    log::info!("Joining results");
+    let results: Vec<Result<String, reqwest::Error>> = futures::future::join_all(futures).await;
+
+    log::info!("Deserialising results");
+    let mut channels = vec![];
+    for x in results {
+        if let Ok(response) = x {
+            log::info!("Deserialising response {}", response);
+            if !response.contains("Cannot send messages") {
+                channels.push(serde_json::from_str::<CreateChannelResponse>(&response).unwrap());
+            }
+        }
+    }
+
+    log::info!("Building requests to dm...");
+    let mut futures = vec![];
+    for channel in channels {
+        log::info!("Building dm for channel {}", channel.id);
+        let json = serde_json::json!(Dm {
+            content: "https://www.youtube.com/watch?v=dQw4w9WgXcQ".to_string(),
+            nonce: "".to_string(),
+            tts: false
+        });
+        let future = client.post(&format!("https://discord.com/api/v8/channels/{}/messages", channel.id))
+            .body(json.to_string())
+            .send();
+        futures.push(future);
+    }
+
+    log::info!("Sending dms...");
+    let results = futures::future::join_all(futures).await;
+    for result in results {
+        match result {
+            Ok(res) => log::info!("Response was good {:?}, {:?}", res.status(), res.text().await),
+            Err(err) => log::error!("Failed to send messages {}", err)
+        }
+    }
+    // JADE: 595354632037859371
+    // TOP: 147510061143425024
+    // JJ: 346291025381294082
+
     // curl 'https://discord.com/api/v8/users/@me/channels' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:87.0) Gecko/20100101 Firefox/87.0' -H 'Accept: */*' -H 'Accept-Language: en-GB' --compressed -H 'Content-Type: application/json' -H 'X-Context-Properties: e30=' -H 'Authorization: mfa.fej_DpEjur3nxEalyu1Me_OL2KzQhCRS6zDOezKZAWwuazPvC1edoXCOoLcMcT3HJggEx3nSTyFA1_bwzN_a' -H 'X-Super-Properties: eyJvcyI6IkxpbnV4IiwiYnJvd3NlciI6IkZpcmVmb3giLCJkZXZpY2UiOiIiLCJzeXN0ZW1fbG9jYWxlIjoiZW4tVVMiLCJicm93c2VyX3VzZXJfYWdlbnQiOiJNb3ppbGxhLzUuMCAoWDExOyBMaW51eCB4ODZfNjQ7IHJ2Ojg3LjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvODcuMCIsImJyb3dzZXJfdmVyc2lvbiI6Ijg3LjAiLCJvc192ZXJzaW9uIjoiIiwicmVmZXJyZXIiOiIiLCJyZWZlcnJpbmdfZG9tYWluIjoiIiwicmVmZXJyZXJfY3VycmVudCI6IiIsInJlZmVycmluZ19kb21haW5fY3VycmVudCI6IiIsInJlbGVhc2VfY2hhbm5lbCI6InN0YWJsZSIsImNsaWVudF9idWlsZF9udW1iZXIiOjc3NjQ1LCJjbGllbnRfZXZlbnRfc291cmNlIjpudWxsfQ==' -H 'X-Fingerprint: 814220013564198944.5VYuUVcapWJ6DY7KfGJfJXoacoA' -H 'Origin: https://discord.com' -H 'Alt-Used: discord.com' -H 'Connection: keep-alive' -H 'Referer: https://discord.com/channels/793832870674169878/793841573187813379' -H 'Cookie: __cfduid=d2d30f09bdbe2b2bb55dde607dbc433501611773648; _ga=GA1.2.1192072284.1611773650; locale=en-GB' -H 'Sec-Fetch-Dest: empty' -H 'Sec-Fetch-Mode: cors' -H 'Sec-Fetch-Site: same-origin' -H 'Pragma: no-cache' -H 'Cache-Control: no-cache' -H 'TE: Trailers' --data-raw '{"recipients":["706231967829590157"]}'
     // the above is the handshake and u get a response like this with new channel id
     // {"id": "814236941519683584", "type": 1, "last_message_id": null, "recipients": [{"id": "706231967829590157", "username": "quima", "avatar": "9b2c46d4f9a6e62f444f80ef99e90131", "discriminator": "3290", "public_flags": 0}]}

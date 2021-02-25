@@ -14,12 +14,9 @@
   <component name="ChangeListManager">
     <list default="true" id="7e700380-9a5a-415a-a3fa-6d1fe67e7415" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.lock" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Cargo.toml" beforeDir="false" afterPath="$PROJECT_DIR$/Cargo.toml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/accounts.json" beforeDir="false" afterPath="$PROJECT_DIR$/accounts.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/discord.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/discord.rs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.rs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/torrc" beforeDir="false" afterPath="$PROJECT_DIR$/torrc" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
